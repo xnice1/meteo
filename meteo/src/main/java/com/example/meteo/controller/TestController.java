@@ -4,6 +4,8 @@ import com.example.meteo.service.WeatherSyncService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 public class TestController {
 
@@ -21,5 +23,10 @@ public class TestController {
     @GetMapping("/api/test-forecasts")
     public String fetchForecasts() {
         return weatherSyncService.fetchAndSaveForecasts();
+    }
+
+    @GetMapping("/api/test-accuracy")
+    public String checkAccuracy() {
+        return weatherSyncService.calculateGfsAccuracy();
     }
 }
