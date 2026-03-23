@@ -88,4 +88,27 @@ public class WeatherSyncService {
         }
         return "Failed to fetch forecast data.";
     }
+
+    public String calculateGfsAccuracy() {
+        List<Object[]> results = forecastRepository.calculateAccuracyForModel("GFS");
+
+        if (results.isEmpty()) return "No math to do! Did you fetch the data first?";
+
+        StringBuilder report = new StringBuilder("<h1>GFS Accuracy Report:</h1>");
+        double totalError = 0;
+
+        for (Object[] row : results) {
+            report.append("Date: ").append(row[0])
+                    .append(" | Guessed: ").append(row[1]).append("°C")
+                    .append(" | Actual: ").append(row[2]).append("°C")
+                    .append(" | <b>Error: ").append(row[3]).append("°C</b><br>");
+
+            totalError += ((Number) row[3]).doubleValue();
+        }
+
+        double averageError = totalError / results.size();
+        report.append("<br><h2>Average GFS Error: ").append(String.format("%.2f", averageError)).append("°C</h2>");
+
+        return report.toString();
+    }
 }
