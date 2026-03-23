@@ -17,4 +17,9 @@ public class TestController {
     public String fetchAndSave() {
         return weatherSyncService.fetchAndSaveActualWeather();
     }
+
+    @GetMapping("/api/test-forecasts")
+    public String fetchForecasts() {
+        return weatherSyncService.fetchAndSaveForecasts();
+    }
 }
