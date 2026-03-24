@@ -25,8 +25,9 @@ public class TestController {
         return weatherSyncService.fetchAndSaveForecasts();
     }
 
-    @GetMapping("/api/test-accuracy")
-    public String checkAccuracy() {
-        return weatherSyncService.calculateGfsAccuracy();
+
+    @GetMapping("/api/scoreboard")
+    public String getScoreboard() {
+        return weatherSyncService.calculateProviderWinPercentage();
     }
 }
