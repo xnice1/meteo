@@ -115,4 +115,54 @@ public class WeatherSyncService {
         }
         return ((double) exactMatchCount / results.size()) * 100.0;
     }
+
+    record FutureForecastHourly(List<String> time, List<Double> temperature_2m_gfs_seamless, List<Double> temperature_2m_icon_seamless) {}
+    record FutureForecastResponse(FutureForecastHourly hourly) {}
+
+    public String generateSuperForecastForTomorrow() {
+        List<Object[]> gfsResults = forecastRepository.calculateAccuracyForModel("GFS");
+        List<Object[]> iconResults = forecastRepository.calculateAccuracyForModel("ICON");
+
+        double gfsAcc = calculatePercentage(gfsResults, 2.0);
+        double iconAcc = calculatePercentage(iconResults, 2.0);
+
+        double totalAcc = gfsAcc + iconAcc;
+        double gfsWeight = gfsAcc / totalAcc;
+        double iconWeight = iconAcc / totalAcc;
+
+        String url = "https://api.open-meteo.com/v1/forecast?latitude=51.75&longitude=19.46&hourly=temperature_2m&models=gfs_seamless,icon_seamless&forecast_days=2";
+        RestTemplate restTemplate = new RestTemplate();
+        FutureForecastResponse response = restTemplate.getForObject(url, FutureForecastResponse.class);
+
+        if (response != null && response.hourly() != null) {
+            int targetIndex = -1;
+            String targetTime = "";
+
+            for (int i = 24; i < response.hourly().time().size(); i++) {
+                if (response.hourly().time().get(i).contains("T12:00")) {
+                    targetIndex = i;
+                    targetTime = response.hourly().time().get(i);
+                    break;
+                }
+            }
+
+            if (targetIndex != -1) {
+                double gfsFutureTemp = response.hourly().temperature_2m_gfs_seamless().get(targetIndex);
+                double iconFutureTemp = response.hourly().temperature_2m_icon_seamless().get(targetIndex);
+
+                double superForecastTemp = (gfsFutureTemp * gfsWeight) + (iconFutureTemp * iconWeight);
+
+                return "<h1>The Łódź Super Forecast</h1>" +
+                        "<b>Target Time:</b> " + targetTime + "<br><br>" +
+                        "<h3>The Engine Weights:</h3>" +
+                        "ICON Voting Power: " + String.format("%.1f", iconWeight * 100) + "%<br>" +
+                        "GFS Voting Power: " + String.format("%.1f", gfsWeight * 100) + "%<br><br>" +
+                        "<h3>The Raw Guesses:</h3>" +
+                        "ICON Predicts: " + iconFutureTemp + "°C<br>" +
+                        "GFS Predicts: " + gfsFutureTemp + "°C<br><br>" +
+                        "<h2 style='color: green;'>Consensus Super Forecast: " + String.format("%.2f", superForecastTemp) + "°C</h2>";
+            }
+        }
+        return "Failed to generate Super Forecast.";
+    }
 }

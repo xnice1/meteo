@@ -4,8 +4,6 @@ import com.example.meteo.service.WeatherSyncService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
 @RestController
 public class TestController {
 
@@ -29,5 +27,10 @@ public class TestController {
     @GetMapping("/api/scoreboard")
     public String getScoreboard() {
         return weatherSyncService.calculateProviderWinPercentage();
+    }
+
+    @GetMapping("/api/super-forecast")
+    public String getSuperForecast() {
+        return weatherSyncService.generateSuperForecastForTomorrow();
     }
 }
